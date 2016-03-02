@@ -31,6 +31,7 @@ public class LoginScreen extends AppCompatActivity implements View.OnClickListen
 
 
     private static final int RC_SIGN_IN = 9001;
+    private TextView mStatusTextView;
 
     private static final String TAG = "Google Sign-In";
     GoogleApiClient mGoogleApiClient;
@@ -111,7 +112,7 @@ public class LoginScreen extends AppCompatActivity implements View.OnClickListen
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
-            hTextView.setText(getString(R.string.signed_in_fmt, acct.getDisplayName()));
+            mStatusTextView.setText(getString(R.string.signed_in_fmt, acct.getDisplayName()));
         } else {
             // Signed out, show unauthenticated UI.
             //updateUI(false);

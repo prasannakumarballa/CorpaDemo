@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
     android:fitsSystemWindows="true"
+    android:weightSum="1"
 
     tools:context="com.example.pessy.corpacabs.LoginScreen">
 
@@ -21,28 +22,26 @@
         android:id="@+id/tv_logo_home"
         android:layout_width="match_parent"
         android:layout_height="100dp"
+        android:layout_above="@+id/sign_in_button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="96dp"
         android:background="@color/colorPrimary"
         android:gravity="center"
         android:textColor="@color/colorAccent"
         android:textSize="30sp"
-
-
-        htext:animateType="line"
-        android:layout_above="@+id/sign_in_button"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="96dp"></com.hanks.htextview.HTextView>
+        htext:animateType="line"></com.hanks.htextview.HTextView>
 
     <com.google.android.gms.common.SignInButton
 
         android:id="@+id/sign_in_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="15dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="88dp" />
+        android:layout_marginBottom="88dp"
+        android:padding="15dp" />
 
 
 </RelativeLayout>
