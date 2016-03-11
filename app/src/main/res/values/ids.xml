@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="err_msg_first_name" type="id">Enter your First Name</item>
+</resources>
