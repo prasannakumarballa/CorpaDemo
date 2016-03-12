@@ -1,49 +1,115 @@
 package com.example.pessy.corpacabs;
 
 import android.Manifest;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.quinny898.library.persistentsearch.SearchBox;
+import com.vstechlab.easyfonts.EasyFonts;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
+public class MapsActivity extends AppCompatActivity implements LocationListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, ActivityCompat.OnRequestPermissionsResultCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+    private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private boolean mPermissionDenied = false;
-    private static final LatLng HYD = new LatLng(17.3700, 78.4800);
+    private double getLatitude;
+    private double getLongitude;
+    private Location location;
+    private GoogleApiClient googleApiClient;
+    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+    private LocationRequest mLocationRequest;
+    private LatLng latLng;
+    private DrawerLayout drawerLayout;
 
 
+    @Bind(R.id.app_bar)
+    Toolbar toolbar;
+    @Bind(R.id.toolbar_title)
+    TextView toolbar_title;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        ButterKnife.bind(this);
+        toolbar_title.setTypeface(EasyFonts.recognition(this));
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //GoogleAPi Client is initialize
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API).build();
+
+        //Locationresult initialize
+        // Create the LocationRequest object
+        mLocationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
+                .setFastestInterval(1 * 1000); // 1 second, in milliseconds
+
+
+        //Toolbar activation
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        //for centered title
+        getSupportActionBar().setDisplayShowCustomEnabled(true);//custom title enabling
+        getSupportActionBar().setDisplayShowTitleEnabled(false);//default title disabling
+
+
+
     }
 
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_map, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        CameraPosition cameraPosition = new CameraPosition.Builder().target(HYD).zoom(15).bearing(90).tilt(30).build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
 
@@ -109,4 +175,67 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "Location Services Connected");
+        Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        if (location == null) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest, this);
+
+        } else {
+            handleNewLocation(location);
+        }
+
+    }
+
+    private void handleNewLocation(Location location) {
+        Log.d(TAG, location.toString());
+        double currentLatitude = location.getLatitude();
+        double currentLongitude = location.getLongitude();
+        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d(TAG, "Location Services Suspended,Please Reconnect.");
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        if (connectionResult.hasResolution()) {
+            try {
+                // Start an Activity that tries to resolve the error
+                connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
+            } catch (IntentSender.SendIntentException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Log.i(TAG, "Location services connection failed with code " + connectionResult.getErrorCode());
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        googleApiClient.connect();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (googleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+            googleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        handleNewLocation(location);
+    }
 }

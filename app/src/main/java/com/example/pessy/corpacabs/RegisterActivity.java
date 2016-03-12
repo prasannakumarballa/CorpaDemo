@@ -29,13 +29,11 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class RegisterActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
-    private static final int RC_SIGN_IN =1;
+    private static final int RC_SIGN_IN = 1;
     private static final String TAG = "Google Sign-In";
     GoogleApiClient mGoogleApiClient;
     GoogleSignInOptions gso;
     SignInButton signInButton;
-
-
 
 
     //All Views are declared and initialized here
@@ -82,6 +80,7 @@ public class RegisterActivity extends AppCompatActivity implements GoogleApiClie
 
 
     }
+
     protected void SigninButton() {
         // Customize sign-in button. The sign-in button can be displayed in
 // multiple sizes and color schemes. It can also be contextually
@@ -91,10 +90,12 @@ public class RegisterActivity extends AppCompatActivity implements GoogleApiClie
 // Scopes.PLUS_LOGIN scope to the GoogleSignInOptions to see the
 // difference.
         signInButton = (SignInButton) findViewById(R.id.sign_in_google_button);
-        signInButton.setSize(SignInButton.COLOR_DARK);
+        signInButton.setSize(SignInButton.SIZE_STANDARD);
         signInButton.setScopes(gso.getScopeArray());
+        signInButton.setColorScheme(SignInButton.COLOR_DARK);
 
     }
+
     private void GoogleApiclient() {
         // Build a GoogleApiClient with access to the Google Sign-In API and the
 // options specified by gso.
@@ -112,6 +113,7 @@ public class RegisterActivity extends AppCompatActivity implements GoogleApiClie
                 .requestEmail()
                 .build();
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

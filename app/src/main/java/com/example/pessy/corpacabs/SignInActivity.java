@@ -173,6 +173,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
 
         }
     }
+
     private boolean validateMobile() {
         if (mobile_signin_input.getText().toString().trim().isEmpty() || mobile_signin_input.getText().toString().trim().length() < 10) {
             mobile_signin_layout.setError(getString(R.string.err_mobile_msg));
@@ -184,6 +185,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
         }
         return true;
     }
+
     private boolean validatePassword() {
         if (password_signin_input.getText().toString().trim().isEmpty() || password_signin_input.getText().toString().trim().length() < 8) {
             password_signin_layout.setError(getString(R.string.err_password_msg));
@@ -196,7 +198,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
     }
 
     private void requestFocus(View view) {
-        if(view.requestFocus()){
+        if (view.requestFocus()) {
             getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 
         }

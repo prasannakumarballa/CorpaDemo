@@ -56,7 +56,7 @@ public abstract class PermissionUtils {
      * @see android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback
      */
     public static boolean isPermissionGranted(String[] grantPermissions, int[] grantResults,
-            String permission) {
+                                              String permission) {
         for (int i = 0; i < grantPermissions.length; i++) {
             if (permission.equals(grantPermissions[i])) {
                 return grantResults[i] == PackageManager.PERMISSION_GRANTED;
