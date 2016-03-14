@@ -30,6 +30,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.vstechlab.easyfonts.EasyFonts;
@@ -68,6 +69,12 @@ public class NavDrawer extends AppCompatActivity
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         toolbar_title.setTypeface(EasyFonts.recognition(this));
+
+        //map Integration of fragment
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
 
         //GoogleAPi Client is initialize
         googleApiClient = new GoogleApiClient.Builder(this)
