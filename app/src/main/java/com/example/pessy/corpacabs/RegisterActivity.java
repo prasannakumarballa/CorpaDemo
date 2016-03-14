@@ -141,7 +141,7 @@ public class RegisterActivity extends AppCompatActivity implements GoogleApiClie
 
     @OnClick(R.id.next_button)
     public void Next_Register() {
-        Intent gotomapsIntent = new Intent(this, MapsActivity.class);
+        Intent gotomapsIntent = new Intent(this, NavDrawer.class);
         startActivity(gotomapsIntent);
     }
 

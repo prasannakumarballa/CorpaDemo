@@ -88,7 +88,7 @@ public class SignInActivity extends AppCompatActivity implements GoogleApiClient
 
     @OnClick(R.id.signin_button)
     public void NextActivity() {
-        Intent gotomapsIntent = new Intent(this, MapsActivity.class);
+        Intent gotomapsIntent = new Intent(this,NavDrawer.class);
         startActivity(gotomapsIntent);
     }
 
