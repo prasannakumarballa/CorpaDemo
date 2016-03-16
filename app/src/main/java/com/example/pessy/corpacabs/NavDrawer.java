@@ -38,6 +38,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.vstechlab.easyfonts.EasyFonts;
 
@@ -49,8 +51,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
         NavigationView.OnNavigationItemSelectedListener,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener
-{
+        LocationListener,GoogleMap.OnMarkerDragListener{
 
     private static final String TAG = NavDrawer.class.getSimpleName();
     private GoogleMap mMap;
@@ -66,6 +67,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
     private LatLng latLng;
     @Bind(R.id.toolbar_title)
     TextView toolbar_title;
+    private CameraPosition cameraPosition;
 
 
     @Override
@@ -99,7 +101,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
         //Locationresult initialize
         // Create the LocationRequest object
-       mLocationRequest = LocationRequest.create()
+        mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(10 * 1000)        // 10 seconds, in milliseconds
                 .setFastestInterval(1 * 1000); // 1 second, in milliseconds
@@ -137,14 +139,16 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
                 Place place = PlacePicker.getPlace(data, this);
                 String toastMsg = String.format("Place: %s", place.getName());
                 Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
-                latLng= place.getLatLng();
-                CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
+                latLng = place.getLatLng();
+                cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 mMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
+
 
             }
         }
     }
+
 
 
     @Override
@@ -204,7 +208,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
         if (googleApiClient.isConnected()) {
             // This is for fused location api that needs when the internet is out.
             // Only Happens in India.
-           LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
             googleApiClient.disconnect();
         }
     }
@@ -215,11 +219,6 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
         placePickerRequest();
-        Intent drawerMap = new Intent(this,NavDrawer.class);
-
-
-
-
     }
 
     /**
@@ -307,7 +306,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "Location Services Connected");
-          Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
 
         if (location == null) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -320,7 +319,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest,  this);
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest, this);
 
         } else {
             handleNewLocation(location);
@@ -329,12 +328,12 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
     private void handleNewLocation(Location location) {
         Log.d(TAG, location.toString());
-       /** double currentLatitude = location.getLatitude();
-        double currentLongitude = location.getLongitude();
-        latLng = new LatLng(currentLatitude, currentLongitude);
-        CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-        */
+        /** double currentLatitude = location.getLatitude();
+         double currentLongitude = location.getLongitude();
+         latLng = new LatLng(currentLatitude, currentLongitude);
+         CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
+         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+         */
     }
 
     @Override
@@ -363,4 +362,21 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
         }
 
     }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
     }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        String place = marker.getTitle();
+        Toast.makeText(this,place,Toast.LENGTH_LONG).show();
+
+    }
+}
