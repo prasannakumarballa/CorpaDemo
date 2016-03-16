@@ -1,6 +1,7 @@
 package com.example.pessy.corpacabs;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -12,7 +13,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,27 +23,39 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.vstechlab.easyfonts.EasyFonts;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class NavDrawer extends AppCompatActivity
-        implements LocationListener, OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, ActivityCompat.OnRequestPermissionsResultCallback,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMyLocationButtonClickListener {
+public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks,
+        NavigationView.OnNavigationItemSelectedListener,
+        GoogleMap.OnMyLocationButtonClickListener,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener
+{
 
     private static final String TAG = NavDrawer.class.getSimpleName();
     private GoogleMap mMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int PLACE_PICKER_REQUEST = 1;
     private boolean mPermissionDenied = false;
     private double getLatitude;
     private double getLongitude;
@@ -62,13 +74,13 @@ public class NavDrawer extends AppCompatActivity
         setContentView(R.layout.activity_nav_drawer);
         ButterKnife.bind(this);
 
-
+        // For initializing the toolbar and to give custom centered title.
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);// For Enabling the custom title
+        getSupportActionBar().setDisplayShowTitleEnabled(false);// For disabling the default Android title
 
-        toolbar_title.setTypeface(EasyFonts.recognition(this));
+        toolbar_title.setTypeface(EasyFonts.recognition(this));// For giving the custom font to title.
 
         //map Integration of fragment
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -76,19 +88,21 @@ public class NavDrawer extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
 
-        //GoogleAPi Client is initialize
+        //GoogleAPi Client is initialized
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API).build();
+                .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .build();
 
         //Locationresult initialize
         // Create the LocationRequest object
-        mLocationRequest = LocationRequest.create()
+       mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(10 * 1000)        // 10 seconds, in milliseconds
                 .setFastestInterval(1 * 1000); // 1 second, in milliseconds
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -98,7 +112,40 @@ public class NavDrawer extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
     }
+
+    private void placePickerRequest() {
+
+        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+
+        try {
+            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesRepairableException e) {
+            e.printStackTrace();
+        } catch (GooglePlayServicesNotAvailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlacePicker.getPlace(data, this);
+                String toastMsg = String.format("Place: %s", place.getName());
+                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
+                latLng= place.getLatLng();
+                CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                mMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
+
+            }
+        }
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -133,6 +180,18 @@ public class NavDrawer extends AppCompatActivity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        googleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        googleApiClient.disconnect();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
 
@@ -143,15 +202,23 @@ public class NavDrawer extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         if (googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+            // This is for fused location api that needs when the internet is out.
+            // Only Happens in India.
+           LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
             googleApiClient.disconnect();
         }
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
+        placePickerRequest();
+        Intent drawerMap = new Intent(this,NavDrawer.class);
+
+
+
 
     }
 
@@ -240,9 +307,20 @@ public class NavDrawer extends AppCompatActivity
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "Location Services Connected");
-        Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+          Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+
         if (location == null) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest, this);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest,  this);
 
         } else {
             handleNewLocation(location);
@@ -251,11 +329,12 @@ public class NavDrawer extends AppCompatActivity
 
     private void handleNewLocation(Location location) {
         Log.d(TAG, location.toString());
-        double currentLatitude = location.getLatitude();
+       /** double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        latLng = new LatLng(currentLatitude, currentLongitude);
         CameraPosition cameraPosition = new CameraPosition.Builder().target(latLng).zoom(15).build();
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        */
     }
 
     @Override
@@ -284,4 +363,4 @@ public class NavDrawer extends AppCompatActivity
         }
 
     }
-}
+    }
