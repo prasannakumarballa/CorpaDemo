@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -38,43 +39,44 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.vstechlab.easyfonts.EasyFonts;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
+import io.github.sporklibrary.Spork;
+import io.github.sporklibrary.annotations.BindLayout;
+import io.github.sporklibrary.annotations.BindView;
 
+@BindLayout(R.layout.activity_nav_drawer)
 public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         NavigationView.OnNavigationItemSelectedListener,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,GoogleMap.OnMarkerDragListener{
+        LocationListener,
+        GoogleMap.OnMarkerDragListener {
 
     private static final String TAG = NavDrawer.class.getSimpleName();
-    private GoogleMap mMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int PLACE_PICKER_REQUEST = 1;
+    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+    @BindView(R.id.toolbar_title)
+    TextView toolbar_title;
+    private GoogleMap mMap;
     private boolean mPermissionDenied = false;
     private double getLatitude;
     private double getLongitude;
     private Location location;
     private GoogleApiClient googleApiClient;
-    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private LocationRequest mLocationRequest;
     private LatLng latLng;
-    @Bind(R.id.toolbar_title)
-    TextView toolbar_title;
     private CameraPosition cameraPosition;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_nav_drawer);
-        ButterKnife.bind(this);
+        Spork.bind(this);
 
         // For initializing the toolbar and to give custom centered title.
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -97,6 +99,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
                 .addApi(LocationServices.API)
                 .addApi(Places.GEO_DATA_API)
                 .addApi(Places.PLACE_DETECTION_API)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
                 .build();
 
         //Locationresult initialize
@@ -150,7 +153,6 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
     }
 
 
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -177,10 +179,14 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Logout();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void Logout() {
     }
 
     @Override
@@ -294,6 +300,8 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
         } else if (id == R.id.nav_about) {
 
+        } else if (id == R.id.nav_emergency) {
+
         }
 
 
@@ -376,7 +384,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
     @Override
     public void onMarkerDragEnd(Marker marker) {
         String place = marker.getTitle();
-        Toast.makeText(this,place,Toast.LENGTH_LONG).show();
+        Toast.makeText(this, place, Toast.LENGTH_LONG).show();
 
     }
 }

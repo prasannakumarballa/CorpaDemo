@@ -8,7 +8,7 @@
     <string name="permission_required_toast">Location permission is required for this demo.</string>
     <string name="register">REGISTER</string>
     <string name="sign_in">Sign in</string>
-    <string name="first_name">First Name</string>
+    <string name="first_name">Name</string>
     <string name="last_name">Last Name</string>
     <string name="mobile">Mobile</string>
     <string name="next">NEXT</string>

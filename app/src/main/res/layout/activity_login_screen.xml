@@ -1,60 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:htext="http://schemas.android.com/apk/res-auto"
+
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    android:fitsSystemWindows="true"
 
 
-    tools:context="com.example.pessy.corpacabs.LoginScreen"
-    android:textAlignment="center"
-    android:touchscreenBlocksFocus="true">
+    tools:context="com.example.pessy.corpacabs.LoginScreen">
 
-
-
-    <TextView
-        android:id="@+id/tv_logo_home"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:gravity="center"
-        android:text="@string/app_name"
-        android:textColor="@color/design_snackbar_background_color"
-        android:textSize="75sp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="116dp"></TextView>
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/sign_in"
-        android:id="@+id/sign_in_button"
-        android:layout_marginTop="107dp"
-        android:background="@color/design_snackbar_background_color"
-        android:layout_below="@+id/tv_logo_home"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginLeft="58dp"
-        android:layout_marginStart="58dp"
-        android:textColor="@color/accent_material_dark" />
+        <TextView
+            android:id="@+id/tv_logo_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="75dp"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text="@string/corpa_logo"
+            android:textColor="@color/design_snackbar_background_color"
+            android:textSize="65sp"/>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/register"
-        android:id="@+id/register_button"
-
-        android:layout_alignTop="@+id/sign_in_button"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="59dp"
-        android:layout_marginEnd="59dp"
-        android:textColor="@color/accent_material_dark"
-        android:background="@color/design_snackbar_background_color" />
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/mobile_login_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp">
 
 
-</RelativeLayout>
+            <EditText
+                android:id="@+id/mobile_login_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/mobile" />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/password_login_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp">
+
+
+            <EditText
+                android:id="@+id/password_login_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/password" />
+        </android.support.design.widget.TextInputLayout>
+
+        <Button
+            android:id="@+id/login_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+
+            android:layout_marginTop="15dp"
+            android:background="@android:color/holo_green_light"
+            android:text="@string/login"
+            android:textSize="15sp" />
+
+
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_google_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"></com.google.android.gms.common.SignInButton>
+
+
+    </LinearLayout>
+</android.support.design.widget.CoordinatorLayout>
