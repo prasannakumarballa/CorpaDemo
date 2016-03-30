@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
-
+apply plugin: 'realm-android'
 
 
 
@@ -35,7 +35,7 @@ repositories {
 
 
 }
-def dbflow_version = "3.0.0-beta5"
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -47,11 +47,8 @@ dependencies {
     compile 'com.google.android.gms:play-services:8.4.0'
     compile 'com.android.support:support-v4:23.2.1'
     compile 'io.github.sporklibrary:spork-android:2.3.0'
-    apt "com.github.Raizlabs.DBFlow:dbflow-processor:${dbflow_version}"
-    compile "com.github.Raizlabs.DBFlow:dbflow-core:${dbflow_version}"
-    compile "com.github.Raizlabs.DBFlow:dbflow:${dbflow_version}"
-
-
+    compile 'de.greenrobot:greendao:2.1.0'
 
 }
 apply plugin: 'com.google.gms.google-services'
+

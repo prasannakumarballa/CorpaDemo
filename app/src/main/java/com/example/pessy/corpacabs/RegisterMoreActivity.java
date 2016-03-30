@@ -1,5 +1,7 @@
 package com.example.pessy.corpacabs;
 
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
@@ -8,10 +10,17 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.pessy.corpacabs.db.DaoMaster;
+import com.example.pessy.corpacabs.db.DaoSession;
+import com.example.pessy.corpacabs.db.User;
+import com.example.pessy.corpacabs.db.UserDao;
+
 import io.github.sporklibrary.Spork;
+import io.github.sporklibrary.annotations.BindClick;
 import io.github.sporklibrary.annotations.BindLayout;
 import io.github.sporklibrary.annotations.BindView;
 
@@ -30,25 +39,44 @@ public class RegisterMoreActivity extends AppCompatActivity {
     @BindView(R.id.password_register_more_layout)
     TextInputLayout password_register_more_layout_activity;
 
+    @BindView(R.id.next_register_more_button)
+    Button sign_up_Button;
+
+    String name_string;
+    String email_string;
+    String mobile_string;
+    String password_string;
+
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Spork.bind(this);
-
+        mobile_string = register_more_mobile_input.getText().toString();
+        password_string = register_more_password_input.getText().toString();
 
         Bundle extras = getIntent().getExtras();
-        String name_string = extras.getString("EXTRA_NAME");
-        String email_string = extras.getString("EXTRA_EMAIL");
-        String mobile_string = register_more_mobile_input.getText().toString().trim();
-        String password_string = register_more_password_input.getText().toString().trim();
+        email_string= extras.getString("EMAIL");
 
 
-
-        Toast.makeText(this, name_string + " " + email_string + " " + mobile_string + " " + password_string, Toast.LENGTH_LONG).show();
         register_more_mobile_input.addTextChangedListener(new MyTextWatcher(register_more_mobile_input));
         register_more_password_input.addTextChangedListener(new MyTextWatcher(register_more_mobile_input));
 
+
+    }
+
+    @BindClick(R.id.next_register_more_button)
+    public void SignUp() {
+
+
+
+        Intent i = new Intent(this,NavDrawer.class);
+        //Pass strings
+        i.putExtra("NAME",name_string);
+        i.putExtra("EMAIL_REG",email_string);
+
+        startActivity(i);
 
     }
 
@@ -64,16 +92,7 @@ public class RegisterMoreActivity extends AppCompatActivity {
         return true;
     }
 
-    private boolean validatePassword() {
-        if (register_more_password_input.getText().toString().trim().isEmpty() || register_more_mobile_input.getText().toString().trim().length() < 8) {
-            password_register_more_layout_activity.setError(getString(R.string.err_password_msg));
-            requestFocus(register_more_password_input);
-            return false;
-        } else {
-            register_more_mobile_layout_activity.setErrorEnabled(false);
-        }
-        return true;
-    }
+
 
     private void requestFocus(View view) {
         if (view.requestFocus()) {
@@ -102,12 +121,8 @@ public class RegisterMoreActivity extends AppCompatActivity {
         public void afterTextChanged(Editable s) {
 
             switch (view.getId()) {
-                case R.id.register_more_mobile:
-                    validateMobile();
-                    break;
-                case R.id.password_register_more:
-                    validatePassword();
-                    break;
+
+
 
             }
 

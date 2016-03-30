@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.example.pessy.corpacabs.NavDrawer">
+    tools:context="com.example.pessy.corpacabs.NavDrawer"
+    android:id="@+id/nav_coord_layout">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -27,7 +28,7 @@
                     android:layout_gravity="center"
                     android:gravity="center"
 
-                    android:text="@string/app_name"
+                    android:text="@string/corpa"
                     android:textAlignment="center"
                     android:textSize="40sp" />
 
