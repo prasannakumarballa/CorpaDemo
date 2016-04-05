@@ -48,8 +48,8 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".RegisterMoreActivity"
-            android:label="@string/register_" />
-        <activity android:name=".data.DatabaseActivity" />
+            android:label="@string/sign_up" />
+
         <!--
  ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.

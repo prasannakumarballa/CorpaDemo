@@ -1,11 +1,14 @@
 package com.example.pessy.corpacabs;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,7 +29,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
@@ -51,61 +53,74 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.vstechlab.easyfonts.EasyFonts;
 
+import java.io.IOException;
+import java.util.List;
+
 import io.github.sporklibrary.Spork;
 import io.github.sporklibrary.annotations.BindLayout;
 import io.github.sporklibrary.annotations.BindView;
 
 @BindLayout(R.layout.activity_nav_drawer)
-public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks,
+public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         NavigationView.OnNavigationItemSelectedListener,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,
-        GoogleMap.OnMarkerDragListener {
+        LocationListener {
 
     private static final String TAG = NavDrawer.class.getSimpleName();
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int PLACE_PICKER_REQUEST = 1;
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+    Context mContext;
     CoordinatorLayout coordinatorLayout;
     Snackbar snackbar;
     @BindView(R.id.toolbar)
     Toolbar toolbar;
     @BindView(R.id.toolbar_title)
     TextView toolbar_title;
+    @BindView(R.id.text_view)
+    TextView set_location;
+    @BindView(R.id.location_text_view)
+    TextView tvAddress;
+
+
+    //like ways
+
     private GoogleMap mMap;
     private boolean mPermissionDenied = false;
-    private double getLatitude;
-    private double getLongitude;
-    private Location location;
     private GoogleApiClient googleApiClient;
-    private LocationRequest mLocationRequest;
+    private LocationRequest mLocationRequest = LocationRequest.create()
+            .setInterval(5000)
+            .setFastestInterval(16)
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    ;
     private LatLng latLng;
     private CameraPosition cameraPosition;
+    private String name_google = "";
+    private String email_google = "";
+    private Marker markerpoint = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Spork.bind(this);
+        //For setting the custom titlebar title
+        toolbar_title.setTypeface(EasyFonts.walkwayUltraBold(this));
+        mContext = this;
 
-        toolbar_title.setTypeface(EasyFonts.recognition(this));
 
-        // For disabling the default Android title
-        // For giving the custom font to title.
-
-        //map Integration of fragment
+        // map Integration of fragment
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        tvAddress.setTypeface(EasyFonts.walkwayUltraBold(this));
+        set_location.setTypeface(EasyFonts.walkwayUltraBold(this));
 
 
-        //For snackbar,Initialize the coordinator layout
-
+//For snackbar,Initialize the coordinator layout
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.nav_coord_layout);
-
-
         //GoogleAPi Client is initialized
         // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -116,15 +131,8 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
                 .addApi(Places.GEO_DATA_API)
                 .addApi(Places.PLACE_DETECTION_API)
                 .addApi(Auth.GOOGLE_SIGN_IN_API)
-                .addApi(AppIndex.API).build();
-
-        //Locationresult initialize
-        // Create the LocationRequest object
-        mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-                .setFastestInterval(1 * 1000); // 1 second, in milliseconds
-
+                .addApi(AppIndex.API)
+                .build();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -133,14 +141,53 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        View header = navigationView.getHeaderView(0);
 
 
+        TextView email_nav = (TextView) header.findViewById(R.id.nav_drawer_email);
+        TextView name_nav = (TextView) header.findViewById(R.id.nav_drawer_name);
+
+
+        if (getIntent().getExtras() != null) {
+            email_google = getIntent().getExtras().getString("EMAIL_GOOGLE");
+            name_google = getIntent().getExtras().getString("NAME_GOOGLE");
+        }
+
+
+        if (email_google != null && name_google != null) {
+            email_nav.setText(email_google);
+            name_nav.setText(name_google);
+        }
 
 
         setSupportActionBar(toolbar);
-
         getSupportActionBar().setDisplayShowCustomEnabled(true);// For Enabling the custom title
         getSupportActionBar().setDisplayShowTitleEnabled(false);//for disabling the default title
+
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        googleApiClient.connect();
+    }
+
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        mMap.setOnMyLocationButtonClickListener(this);
+        mMap.setPadding(0,50,0,0);
+        enableMyLocation();
+        placePickerRequest();
+
+        mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition cameraPosition) {
+                new ReverseGeocodingTask().execute(cameraPosition.target);
+            }
+        });
 
     }
 
@@ -165,28 +212,43 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
             if (resultCode == RESULT_OK) {
                 Place place = PlacePicker.getPlace(data, this);
                 String toastMsg = String.format("Pick-up Point: %s", place.getName());
+                String placeName = (String) place.getName();
                 Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
                 latLng = place.getLatLng();
                 cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                mMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
-                mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+                snackbar = Snackbar.make(coordinatorLayout, "Book the Cab Now", Snackbar.LENGTH_INDEFINITE).setAction("BOOK", new View.OnClickListener() {
                     @Override
-                    public void onMapLongClick(LatLng latLng) {
-                        snackbar = Snackbar.make(coordinatorLayout,"Book Now",Snackbar.LENGTH_INDEFINITE).setAction("BOOK", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent i = new Intent(getApplication(),BookingActivity.class);
-                                startActivity(i);
-                            }
-                        });
-                        snackbar.show();
+                    public void onClick(View v) {
+                        Intent i = new Intent(getApplication(), BookingActivity.class);
+                        startActivity(i);
                     }
                 });
-
-
-
+                snackbar.setActionTextColor(getResources().getColor(R.color.colorPrimary));
+                snackbar.show();
             }
+
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location loc) {
+        // TODO Auto-generated method stub
+        if (loc == null)
+            return;
+
+
+        if (markerpoint == null) {
+            latLng = new LatLng(loc.getLatitude(), loc.getLongitude());
+            cameraPosition = new CameraPosition.Builder().target(latLng).zoom(17).build();
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            markerpoint = mMap.addMarker(new MarkerOptions()
+                    .flat(true)
+                    .title("Your Current Position")
+
+            );
+
+
         }
     }
 
@@ -221,6 +283,12 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
             return true;
         }
 
+        if (id == android.R.id.home) {
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawer.openDrawer(GravityCompat.START);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -234,51 +302,13 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
                         // updateUI(false);
                         // [END_EXCLUDE]
 
-                        snackbar = Snackbar.make(coordinatorLayout, "Signed out", Snackbar.LENGTH_LONG);
-                        snackbar.show();
+                        Toast.makeText(getApplication(), "Signed Out from Corpa", Toast.LENGTH_LONG).show();
                         startActivity(new Intent(getApplication(), LoginScreen.class));
 
                     }
                 });
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        googleApiClient.connect();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "NavDrawer Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://com.example.pessy.corpacabs/http/host/path")
-        );
-        AppIndex.AppIndexApi.start(googleApiClient, viewAction);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "NavDrawer Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://com.example.pessy.corpacabs/http/host/path")
-        );
-        AppIndex.AppIndexApi.end(googleApiClient, viewAction);
-        googleApiClient.disconnect();
-    }
 
     @Override
     protected void onResume() {
@@ -298,13 +328,6 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
         }
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        mMap.setOnMyLocationButtonClickListener(this);
-        enableMyLocation();
-        placePickerRequest();
-    }
 
     /**
      * Enables the My Location layer if the fine location permission has been granted.
@@ -341,7 +364,7 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(this, "My Location Accessing...", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Accessing My Location", Toast.LENGTH_LONG).show();
         return false;
     }
 
@@ -434,11 +457,6 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        handleNewLocation(location);
-
-    }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
@@ -455,20 +473,57 @@ public class NavDrawer extends AppCompatActivity implements OnMapReadyCallback,
 
     }
 
-    @Override
-    public void onMarkerDragStart(Marker marker) {
 
+    private class ReverseGeocodingTask extends AsyncTask<LatLng, Void, String> {
+        double _latitude, _longitude;
+
+        @Override
+        protected String doInBackground(LatLng... params) {
+            Geocoder geocoder = new Geocoder(mContext);
+            _latitude = params[0].latitude;
+            _longitude = params[0].longitude;
+
+            List<Address> addresses = null;
+            String addressText = "";
+
+            try {
+                addresses = geocoder.getFromLocation(_latitude, _longitude, 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (addresses != null && addresses.size() > 0) {
+                Address returnedAddress = addresses.get(0);
+                StringBuilder strReturnedAddress = new StringBuilder("");
+
+                for (int i = 0; i < returnedAddress.getMaxAddressLineIndex()-1; i++) {
+                    if (returnedAddress.getMaxAddressLineIndex() == (i - 1)) {
+                        strReturnedAddress.append(returnedAddress.getAddressLine(i));
+                    } else {
+                        strReturnedAddress.append(returnedAddress.getAddressLine(i)).append(",");
+                    }
+                }
+                addressText = strReturnedAddress.toString();
+                Log.w("My Current location", "" + strReturnedAddress.toString());
+            }
+
+            return addressText;
+        }
+
+        @Override
+        protected void onPostExecute(String addressText) {
+            final String result = addressText;
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    // TODO Auto-generated method stub
+                    tvAddress.setText(result);
+                }
+            });
+
+
+        }
     }
 
-    @Override
-    public void onMarkerDrag(Marker marker) {
 
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-        String place = marker.getTitle();
-        Toast.makeText(this, place, Toast.LENGTH_LONG).show();
-
-    }
 }

@@ -8,12 +8,13 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.pessy.corpacabs.MyTripsActivity"
-    android:background="@color/colorPrimary">
+    >
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="History"
+        android:textColor="@color/wallet_holo_blue_light"
         android:textSize="33sp"
         android:id="@+id/textView_mytrips"
         android:layout_alignParentTop="true"

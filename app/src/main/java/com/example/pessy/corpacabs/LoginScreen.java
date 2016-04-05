@@ -35,23 +35,31 @@ public class LoginScreen extends AppCompatActivity implements GoogleApiClient.On
 
     private static final int RC_SIGN_IN = 9001;
     private static final String TAG = "Google Sign-In";
-    List users;
     @BindView(R.id.tv_logo_home)
     TextView app_logo;
-    @BindView(R.id.login_button)
-    Button login_button;
+    @BindView(R.id.sign_button)
+    Button sign_button;
     @BindView(R.id.email_login_input)
     EditText email_login;
+    @BindView(R.id.password_login_input)
+    EditText password_login;
     private GoogleApiClient mGoogleApiClient;
     private ProgressDialog mProgressDialog;
-    private String name;
-    private String email;
+    @BindView(R.id.or_login)
+    TextView or;
+
+    private String name_google="";
+    private String email_google="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Spork.bind(this);
-        app_logo.setTypeface(EasyFonts.recognition(this));
+        app_logo.setTypeface(EasyFonts.walkwayUltraBold(this));
+        or.setTypeface(EasyFonts.walkwayUltraBold(this));
+        sign_button.setTypeface(EasyFonts.walkwayUltraBold(this));
+        email_login.setTypeface(EasyFonts.walkwayUltraBold(this));
+        password_login.setTypeface(EasyFonts.walkwayUltraBold(this));
 
 
         // [START configure_signin]
@@ -82,10 +90,11 @@ public class LoginScreen extends AppCompatActivity implements GoogleApiClient.On
         // difference.
         SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_google_button);
         signInButton.setSize(SignInButton.SIZE_STANDARD);
+        signInButton.setColorScheme(SignInButton.COLOR_DARK);
         signInButton.setScopes(gso.getScopeArray());
         // [END customize_button]
 
-        email = email_login.getText().toString();
+
     }
 
     @BindClick(R.id.sign_in_google_button)
@@ -99,13 +108,6 @@ public class LoginScreen extends AppCompatActivity implements GoogleApiClient.On
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
     // [END signIn]
-
-    @BindClick(R.id.login_button)
-    public void next() {
-        Intent i = new Intent(this, RegisterMoreActivity.class);
-        i.putExtra("EMAIL", email);
-        startActivity(i);
-    }
 
 
     @Override
@@ -124,12 +126,14 @@ public class LoginScreen extends AppCompatActivity implements GoogleApiClient.On
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
-            name = acct.getDisplayName();
-            email = acct.getEmail();
+            name_google= acct.getDisplayName();
+            email_google = acct.getEmail();
 
             Toast.makeText(this, "Signed In As " + acct.getDisplayName(), Toast.LENGTH_LONG).show();
-
-            startActivity(new Intent(this, NavDrawer.class));
+            Intent g= new Intent(this,NavDrawer.class);
+            g.putExtra("NAME_GOOGLE",name_google);
+            g.putExtra("EMAIL_GOOGLE",email_google);
+            startActivity(g);
 
 
             //updateUI(true);
@@ -182,6 +186,12 @@ public class LoginScreen extends AppCompatActivity implements GoogleApiClient.On
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.hide();
         }
+    }
+
+    @BindClick(R.id.sign_button)
+    public void next() {
+        Intent i = new Intent(this, RegisterMoreActivity.class);
+        startActivity(i);
     }
 
 
